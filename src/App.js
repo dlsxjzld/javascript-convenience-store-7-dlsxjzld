@@ -1,7 +1,5 @@
 import { InputView } from './View/InputView.js';
-
-const PRODUCT_FILENAME = 'products.md';
-const PROMOTION_FILENAME = 'promotions.md';
+import { PRODUCT_FILENAME, PROMOTION_FILENAME } from './constants.js';
 class App {
   async run() {
     const productsInput = InputView.readFile(PRODUCT_FILENAME);

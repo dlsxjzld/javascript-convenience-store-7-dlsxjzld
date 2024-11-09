@@ -7,7 +7,11 @@ export const InputView = {
     const absoluteDirectoryPath = path.resolve();
     const targetFilePath = `${absoluteDirectoryPath}/public/${fileName}`;
 
-    return fs.readFileSync(targetFilePath, 'utf8').split('\n');
+    return fs
+      .readFileSync(targetFilePath, 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map((row) => row.split(','));
   },
 
   async readItem() {

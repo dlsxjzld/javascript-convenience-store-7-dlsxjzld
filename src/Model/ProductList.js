@@ -1,11 +1,14 @@
 export default class ProductList {
   #productList;
 
+  #keyList;
+
   constructor(input) {
-    const [, ...metaDataList] = input;
+    const [keyList, ...metaDataList] = input;
+    this.#keyList = keyList;
     this.#productList = new Map();
     this.#initialize(metaDataList);
-    this.toString();
+    // this.toString();
   }
 
   #initialize(metaDataList) {
@@ -43,6 +46,7 @@ export default class ProductList {
     product.withPromotion = { quantity: Number(quantity), promotion };
     if (product.withNoPromotion.quantity === null) {
       product.withNoPromotion.quantity = 0;
+      product.withNoPromotion.promotion = 'null';
     }
   }
 
@@ -54,6 +58,20 @@ export default class ProductList {
 
   toString() {
     console.log(this.#productList);
+  }
+
+  get KeyList() {
+    return this.#keyList;
+  }
+
+  getProductInventory() {
+    const inventoryList = [];
+    Array.from(this.#productList.values()).forEach((value) => {
+      const { name, price, withPromotion, withNoPromotion } = value;
+      inventoryList.push({ name, price, ...withPromotion });
+      inventoryList.push({ name, price, ...withNoPromotion });
+    });
+    return inventoryList;
   }
 }
 

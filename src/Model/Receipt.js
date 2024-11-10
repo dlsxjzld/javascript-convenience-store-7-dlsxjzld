@@ -60,8 +60,9 @@ export default class Receipt {
     for (const [index, info] of this.infos.entries()) {
       if (info.canBuyPromotion) {
         await this.spendPromotionInventory(info, index);
+      } else {
+        this.spendNoPromotionInventory(info, index);
       }
-      this.spendNoPromotionInventory(info, index);
     }
   }
 
@@ -106,23 +107,33 @@ export default class Receipt {
       info.productCount,
       withPromotion.promotion,
     );
+    const initialCount = info.productCount;
     this.updateCurrentInfos(index, { promoteCount, freeCount, regularCount });
     this.infos[index].productCount = promoteCount + freeCount + regularCount;
-
     if (canAddPromote === 0 && canAddFree === 0) return;
 
     const tmp = await InputView.readAddPromotion(info.name, canAddFree);
     if (tmp === 'N') {
-      this.infos[index].regularPricePurchase += canAddPromote;
       this.infos[index].productCount += canAddPromote;
+      this.infos[index].regularPricePurchase += canAddPromote;
       return;
     }
-
-    if (withPromotion.quantity - info.productCount >= canAddFree) {
+    if (withPromotion.quantity - initialCount >= canAddFree) {
       this.infos[index].freePurchase += canAddFree + regularCount;
       this.infos[index].promotionPricePurchase += canAddPromote;
       this.infos[index].regularPricePurchase = 0;
       this.infos[index].productCount += canAddFree + regularCount + canAddPromote;
+      return;
+    }
+
+    const noPromotion = initialCount + canAddFree;
+    const readAddRegular = await InputView.readAddRegular(info.name, noPromotion);
+    if (readAddRegular === 'Y') {
+      this.infos[index].regularPricePurchase = noPromotion;
+      this.infos[index].productCount = noPromotion;
+    } else {
+      this.infos[index].regularPricePurchase = 0;
+      this.infos[index].productCount = 0;
     }
   }
 

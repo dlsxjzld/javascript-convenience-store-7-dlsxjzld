@@ -36,7 +36,7 @@ export const InputView = {
 
   async readAddRegular(productName, get) {
     const input = await Console.readLineAsync(
-      `현재 ${productName} ${get}개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)`,
+      `현재 ${productName} ${get}개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n`,
     );
     Console.print('');
     if (input === 'Y' || input === 'N') {

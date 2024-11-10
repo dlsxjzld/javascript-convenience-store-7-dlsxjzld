@@ -32,7 +32,7 @@ export const OutputView = {
     return `${quantity}개`;
   },
   getPromotion(promotion) {
-    if (promotion !== 'null') {
+    if (promotion !== 'null' && promotion !== 'mock') {
       return ` ${promotion}`;
     }
     return '';

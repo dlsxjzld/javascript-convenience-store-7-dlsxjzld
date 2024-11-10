@@ -160,7 +160,7 @@ export default class Receipt {
   }
 
   printHead() {
-    Console.print('\n==============W 편의점================');
+    Console.print('==============W 편의점================');
     Console.print('상품명		          수량	      금액   ');
   }
 

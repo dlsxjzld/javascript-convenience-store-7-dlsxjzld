@@ -45,39 +45,34 @@ export default class PromotionList {
 
   calculateBuyAndGet(productCount, promotion) {
     const { buy, get } = this.getAllInformationOfPromotion(promotion);
-    let promoteCount = 0;
-    let freeCount = 0;
-    let regularCount = 0;
-    let canAddPromote = 0;
-    let canAddFree = 0;
-
-    while (true) {
-      if (productCount < buy) {
-        regularCount = productCount;
-        break;
-      }
-
+    const promotionStats = this.makeObject();
+    if (productCount < buy) {
+      promotionStats.regularCount = productCount;
+      return promotionStats;
+    }
+    while (productCount >= buy) {
       if (productCount >= buy + get) {
         const tmp = Math.floor(productCount / (buy + get));
-        promoteCount = tmp * buy;
-        freeCount = tmp * get;
+        promotionStats.promoteCount = tmp * buy;
+        promotionStats.freeCount = tmp * get;
         productCount -= promoteCount + freeCount;
-      } else if (productCount < buy + get) {
-        if (productCount >= buy) {
-          canAddPromote += buy;
-          canAddFree = get - (productCount - buy);
-
-          productCount -= buy;
-        }
+      } else if (productCount >= buy) {
+        promotionStats.canAddPromote += buy;
+        promotionStats.canAddFree = get - (productCount - buy);
+        productCount -= buy;
       }
     }
 
+    return promotionStats;
+  }
+
+  makeObject() {
     return {
-      promoteCount,
-      freeCount,
-      regularCount,
-      canAddPromote,
-      canAddFree,
+      promoteCount: 0,
+      freeCount: 0,
+      regularCount: 0,
+      canAddPromote: 0,
+      canAddFree: 0,
     };
   }
 

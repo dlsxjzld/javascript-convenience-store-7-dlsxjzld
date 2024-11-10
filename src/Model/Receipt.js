@@ -106,14 +106,6 @@ export default class Receipt {
     return this.#promotionList.calculateBuyAndGet(productCount, promotion);
   }
 
-  async checkAddPromotion({ name, canAddFree, index, canAddPromote }) {
-    const tmp = await InputView.readAddPromotion(name, canAddFree);
-    if (tmp === 'N') {
-      this.infos[index].regularPricePurchase += canAddPromote;
-      this.infos[index].productCount += canAddPromote;
-    }
-  }
-
   async notExceedPromotion({ info, index, withPromotion }) {
     const { promoteCount, freeCount, regularCount, canAddPromote, canAddFree } =
       this.getCalculateBuyAndGet(info.productCount, withPromotion.promotion);
@@ -121,7 +113,14 @@ export default class Receipt {
     this.infos[index].productCount = promoteCount + freeCount + regularCount;
 
     if (canAddPromote === 0 && canAddFree === 0) return;
-    await this.checkAddPromotion({ name: info.name, canAddFree, index });
+
+    const tmp = await InputView.readAddPromotion(info.name, canAddFree);
+    if (tmp === 'N') {
+      this.infos[index].regularPricePurchase += canAddPromote;
+      this.infos[index].productCount += canAddPromote;
+      return;
+    }
+
     if (withPromotion.quantity - info.productCount >= canAddFree) {
       this.infos[index].freePurchase += canAddFree + regularCount;
       this.infos[index].promotionPricePurchase += canAddPromote;

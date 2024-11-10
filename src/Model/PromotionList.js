@@ -63,7 +63,6 @@ export default class PromotionList {
         freeCount = tmp * get;
         productCount -= promoteCount + freeCount;
       } else if (productCount < buy + get) {
-        // 2 < 2 + 1
         if (productCount >= buy) {
           canAddPromote += buy;
           canAddFree = get - (productCount - buy);

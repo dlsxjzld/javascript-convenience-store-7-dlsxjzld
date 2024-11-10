@@ -16,6 +16,13 @@ const getCharCount = (char, input) => {
   return count;
 };
 
+const hasEmptySpace = (input) => {
+  toThrowNewError(
+    input.includes(' '),
+    '잘못된 입력입니다. 다시 입력해 주세요.',
+  );
+};
+
 const doesSquareBracketCountsMatch = (input) => {
   const firstSquareBracketCount = getCharCount('[', input);
   const secondSquareBracketCount = getCharCount(']', input);
@@ -116,6 +123,7 @@ const doesProductCanSell = (input, productList) => {
 };
 
 const checkBuyInput = (buyInput, productList) => {
+  hasEmptySpace(buyInput);
   doesSquareBracketCountsMatch(buyInput);
   doesDashCountsMatch(buyInput);
   doesCommaCountsMatch(buyInput);

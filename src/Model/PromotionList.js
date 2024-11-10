@@ -8,7 +8,7 @@ export default class PromotionList {
     this.#keyList = keyList;
     this.#promotionList = new Map();
     this.#initialize(metaDataList);
-    this.toString();
+    // this.toString();
   }
 
   #initialize(metaDataList) {
@@ -32,5 +32,9 @@ export default class PromotionList {
 
   toString() {
     console.log(this.#promotionList);
+  }
+
+  getAllInformationOfPromotion(promotion) {
+    return this.#promotionList.get(promotion);
   }
 }

@@ -155,6 +155,7 @@ export default class Receipt {
       this.infos[index].regularPricePurchase = noPromotion;
     } else {
       this.infos[index].regularPricePurchase = 0;
+      this.infos[index].productCount -= noPromotion;
     }
   }
 
@@ -175,13 +176,12 @@ export default class Receipt {
       Console.print(`${name}  ${productCount} ${(price * productCount).toLocaleString()}`);
     });
     Console.print('=============증	    정===============');
-    this.infos.forEach(({ name, price, productCount, freePurchase }) => {
+    this.infos.forEach(({ name, price, productCount, regularPricePurchase, freePurchase }) => {
       if (freePurchase > 0) {
         promotionDiscount += freePurchase * price;
         Console.print(`${name}  ${freePurchase}`);
-        return;
       }
-      membershipDiscount += price * productCount * 0.3;
+      membershipDiscount += price * regularPricePurchase * 0.3;
     });
     Console.print('====================================');
     Console.print(`총구매액		    ${totalCount}	   ${totalPrice.toLocaleString()}`);

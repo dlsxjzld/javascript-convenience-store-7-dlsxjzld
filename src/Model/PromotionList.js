@@ -1,3 +1,5 @@
+import { DateTimes } from '@woowacourse/mission-utils';
+
 export default class PromotionList {
   #keyList;
 
@@ -36,5 +38,13 @@ export default class PromotionList {
 
   getAllInformationOfPromotion(promotion) {
     return this.#promotionList.get(promotion);
+  }
+
+  compareTimesAboutPromotion(promotion) {
+    const { startDate, endDate } = this.getAllInformationOfPromotion(promotion);
+    const now = DateTimes.now();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    return now >= start && now <= end;
   }
 }

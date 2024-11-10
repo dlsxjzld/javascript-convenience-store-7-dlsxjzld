@@ -24,6 +24,7 @@ export default class ProductList {
     const product = {
       name,
       price: null,
+      hasPromotion: false,
       withPromotion: { quantity: null, promotion: null },
       withNoPromotion: { quantity: null, promotion: null },
     };
@@ -43,6 +44,7 @@ export default class ProductList {
   setProductWithPromotion({ name, price, quantity, promotion }) {
     const product = this.#productList.get(name);
     product.price = Number(price);
+    product.hasPromotion = true;
     product.withPromotion = { quantity: Number(quantity), promotion };
     if (product.withNoPromotion.quantity === null) {
       product.withNoPromotion.quantity = 0;
@@ -72,6 +74,14 @@ export default class ProductList {
       inventoryList.push({ name, price, ...withNoPromotion });
     });
     return inventoryList;
+  }
+
+  getKindsOfProductList() {
+    return Array.from(new Set(this.#productList.keys()));
+  }
+
+  getInventoryOfProduct(product) {
+    return this.#productList.get(product);
   }
 }
 

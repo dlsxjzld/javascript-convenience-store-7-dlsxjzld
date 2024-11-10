@@ -47,8 +47,7 @@ export default class ProductList {
     product.hasPromotion = true;
     product.withPromotion = { quantity: Number(quantity), promotion };
     if (product.withNoPromotion.quantity === null) {
-      product.withNoPromotion.quantity = 0;
-      product.withNoPromotion.promotion = 'null';
+      product.withNoPromotion = { quantity: 0, promotion: 'mock' };
     }
   }
 

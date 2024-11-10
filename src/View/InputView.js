@@ -18,6 +18,7 @@ export const InputView = {
 
   async getMembership() {
     const input = await Console.readLineAsync(MEMBERSHIP_DISCOUNT_MESSAGE);
+    Console.print('');
     if (input === 'Y' || input === 'N') {
       return input;
     }
@@ -26,6 +27,7 @@ export const InputView = {
 
   async moreBuy() {
     const input = await Console.readLineAsync(MORE_BUY);
+    Console.print('');
     if (input === 'Y' || input === 'N') {
       return input;
     }
@@ -36,6 +38,7 @@ export const InputView = {
     const input = await Console.readLineAsync(
       `현재 ${productName} ${get}개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)`,
     );
+    Console.print('');
     if (input === 'Y' || input === 'N') {
       return input;
     }
@@ -46,6 +49,7 @@ export const InputView = {
     const input = await Console.readLineAsync(
       `현재 ${productName}은(는) ${get}개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n`,
     );
+    Console.print('');
     if (input === 'Y' || input === 'N') {
       return input;
     }
@@ -54,6 +58,7 @@ export const InputView = {
 
   async userInput(validate, message, rest) {
     const input = await Console.readLineAsync(message);
+    Console.print('');
     if (validate(input, rest)) {
       return input;
     }

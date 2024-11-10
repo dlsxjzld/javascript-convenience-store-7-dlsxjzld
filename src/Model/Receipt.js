@@ -66,18 +66,19 @@ export default class Receipt {
     }
   }
 
-  async wrapperNotExceedPromotion({ info, index, withPromotion }) {
+  async wrapperNotExceedPromotion({ info, index, withPromotion, withNoPromotion }) {
     await this.notExceedPromotion({
       info,
       index,
       withPromotion,
+      withNoPromotion,
     });
   }
 
   async spendPromotionInventory(info, index) {
-    const { withPromotion } = this.getProductPromotionInfo(info.name);
+    const { withPromotion, withNoPromotion } = this.getProductPromotionInfo(info.name);
     if (info.productCount <= withPromotion.quantity) {
-      await this.wrapperNotExceedPromotion({ info, index, withPromotion });
+      await this.wrapperNotExceedPromotion({ info, index, withPromotion, withNoPromotion });
     } else {
       await this.exceedPromotion(info, index, withPromotion);
     }
@@ -102,7 +103,7 @@ export default class Receipt {
     return this.#promotionList.calculateBuyAndGet(productCount, promotion);
   }
 
-  async notExceedPromotion({ info, index, withPromotion }) {
+  async notExceedPromotion({ info, index, withPromotion, withNoPromotion }) {
     const { promoteCount, freeCount, regularCount, canAddPromote, canAddFree } = this.getCalculateBuyAndGet(
       info.productCount,
       withPromotion.promotion,
@@ -127,6 +128,9 @@ export default class Receipt {
     }
 
     const noPromotion = initialCount + canAddFree;
+    if (noPromotion > withPromotion.quantity + withNoPromotion.quantity) {
+      return;
+    }
     const readAddRegular = await InputView.readAddRegular(info.name, noPromotion);
     if (readAddRegular === 'Y') {
       this.infos[index].regularPricePurchase = noPromotion;
@@ -138,7 +142,7 @@ export default class Receipt {
   }
 
   async exceedPromotion(info, index, withPromotion) {
-    const { promoteCount, freeCount, regularCount } = this.#promotionList.calculateBuyAndGet(
+    const { promoteCount, freeCount, regularCount, canAddPromote, canAddFree } = this.#promotionList.calculateBuyAndGet(
       withPromotion.quantity,
       withPromotion.promotion,
     );

@@ -20,11 +20,11 @@ export const InputView = {
     );
   },
 
-  async userInput(validate, message) {
+  async userInput(validate, message, rest) {
     const input = await Console.readLineAsync(message);
-    if (validate(input)) {
+    if (validate(input, rest)) {
       return input;
     }
-    return this.userInput(validate, message);
+    return this.userInput(validate, message, rest);
   },
 };

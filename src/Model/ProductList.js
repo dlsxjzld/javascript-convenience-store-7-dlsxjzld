@@ -80,58 +80,7 @@ export default class ProductList {
     return Array.from(new Set(this.#productList.keys()));
   }
 
-  getInventoryOfProduct(product) {
+  getAllInformationOfProduct(product) {
     return this.#productList.get(product);
   }
 }
-
-// const tmp = {
-//   콜라: {
-//     name: 콜라,
-//     price: 1000,
-//     withPromotion: {
-//       quantity: 10,
-//       promotion: '탄산2+1',
-//     },
-//     withNoPromotion: {
-//       quantity: 10,
-//       promotion: 'null',
-//     },
-//   },
-//   사이다: {
-//     name: 사이다,
-//     price: 1000,
-//     withPromotion: {
-//       quantity: 8,
-//       promotion: '탄산2+1',
-//     },
-//     withNoPromotion: {
-//       quantity: 7,
-//       promotion: 'null',
-//     },
-//   },
-//   오렌지주스: {
-//     name: 오렌지주스,
-//     price: 1000,
-//     withPromotion: {
-//       quantity: 7,
-//       promotion: 'MD추천상품',
-//     },
-//     withNoPromotion: {
-//       quantity: 0,
-//       promotion: 'null',
-//     },
-//   },
-//   비타민워터: {
-//     name: 비타민워터,
-//     price: 1500,
-//     withPromotion: {
-//       quantity: null,
-//       promotion: null,
-//     },
-//     withNoPromotion: {
-//       quantity: 6,
-//       promotion: 'null',
-//     },
-//   },
-// };

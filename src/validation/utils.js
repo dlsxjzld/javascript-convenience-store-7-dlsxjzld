@@ -102,7 +102,7 @@ const hasProduct = (input, kindsOfProductList) => {
 
 const getCount = (productName, productList) => {
   const { hasPromotion, withNoPromotion, withPromotion } =
-    productList.getInventoryOfProduct(productName);
+    productList.getAllInformationOfProduct(productName);
   let count = 0;
   if (hasPromotion) {
     count += withPromotion.quantity;

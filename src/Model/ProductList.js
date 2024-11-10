@@ -8,7 +8,6 @@ export default class ProductList {
     this.#keyList = keyList;
     this.#productList = new Map();
     this.#initialize(metaDataList);
-    // this.toString();
   }
 
   #initialize(metaDataList) {
@@ -57,10 +56,6 @@ export default class ProductList {
     product.withNoPromotion = { quantity: Number(quantity), promotion };
   }
 
-  toString() {
-    console.log(this.#productList);
-  }
-
   get KeyList() {
     return this.#keyList;
   }
@@ -81,5 +76,16 @@ export default class ProductList {
 
   getAllInformationOfProduct(product) {
     return this.#productList.get(product);
+  }
+
+  updateProductInfo(receipt) {
+    const { name, productCount } = receipt;
+    const { withPromotion, withNoPromotion } = this.#productList.get(name);
+    if (withPromotion.quantity >= productCount) {
+      withPromotion.quantity -= productCount;
+      return;
+    }
+    withNoPromotion.quantity -= productCount - withPromotion.quantity;
+    withPromotion.quantity = 0;
   }
 }

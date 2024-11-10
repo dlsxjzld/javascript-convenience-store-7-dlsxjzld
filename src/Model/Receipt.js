@@ -1,3 +1,6 @@
+import { Console } from '@woowacourse/mission-utils';
+import { InputView } from '../View/InputView.js';
+
 export default class Receipt {
   #buyList;
 
@@ -11,55 +14,26 @@ export default class Receipt {
     this.#promotionList = promotionList;
     this.infos = [];
     this.initialize();
-    // 2+1
-    // { 이름: 콜라, 가격: 1000, 수량: 9,프로모션:6개, 증정: 3개, 정가구매:0개  }
-    // { 이름: 콜라, 가격: 1000, 수량: 10,프로모션:6개, 증정: 3개, 정가구매:1개  }
   }
-  /**
-   * buyList에 각각의 원소마다 [상품, 개수]가 있다.
-   * 0. initialize로 infos에 각각의 원소마다 이름, 가격, 수량, 프로모션, 증정, 정가구매 정보 초기화 O
-   * // [{ 이름: 콜라, 가격: 1000, 수량: 9,프로모션:0, 증정: 0, 정가구매:0, canBuyPromotion: true },...]
-   *
-   * 프로모션 갖고 있는지 확인 해야함 O
-   * 프로모션 날짜와 현재 날짜 비교 해야함 O
-   * 프로모션 재고 있는지 확인해야함 O
-   *
-   * 이걸 가지고 forEach 돌면서 각 productList의 withPromotion과 withNoPromotion의 재고 비교
-   * // 다 하고 나서의 결과는 다음과 같다.
-   * // 2+1
-   * // { 이름: 콜라, 가격: 1000, 수량: 9,프로모션:6개, 증정: 3개, 정가구매:0개  }
-   * // { 이름: 콜라, 가격: 1000, 수량: 10,프로모션:6개, 증정: 3개, 정가구매:1개  }
-   * 0. 프로모션 재고 살 수 있을 때 (canBuyPromotion: true)
-   *    1. 수량이랑 프로덕트리스트의 프로모션 재고 비교
-   *    1-1 수량 < 프로덕트리스트의 프로모션 재고
-   *        - 프로모션 추가 구매할지 묻기
-   *          - 추가 구매시 infos의 프로모션 개수 업데이트
-   *          - 추가 구매시 infos의 수량 개수 업데이트
-   *          - 추가 구매 X시 넘어가기
-   *    1-2 수량 === 프로덕트리스트의 프로모션 재고
-   *        - 넘어가기
-   *    1-3 수량 > 프로덕트리스트의 프로모션 재고
-   *        - 수량 - (buy+get)*N 만큼 적용 안되는 수량 있다고 말하기
-   *          - Y 누르면
-   *            - infos의 정가구매 개수 업데이트: (수량 - (buy+get)*N)
-   *            - infos의 프로모션 개수 업데이트: (buy+get)*N
-   *          - N 누르면
-   *            - infos의 수량 개수 업데이트: (buy+get)*N
-   *            - infos의 프로모션 개수 업데이트: (buy+get)*N
-   *    2. 각 상품들의 최종 구매 결정 나오면 멤버십 할인 받을지 묻기
-   *       - Y 누르면
-   *         - 각 물품의 정가구매 만 다 더해서 여기에 * 0.7
-   *         - 8000원 넘어가면 8000원으로 고정
-   *       - X 누르면
-   *         - 멤버십할인은 0 원
-   * 1. 프로모션 재고 살 수 없을 때 (canBuyPromotion: false)
-   *    1-1 일반 재고 소진
-   */
+
+  async run() {
+    await this.spendInventory();
+    const isMembership = await InputView.getMembership();
+
+    this.printReceipt(isMembership);
+    this.updateInventory();
+  }
+
+  updateInventory() {
+    this.infos.forEach((info) => {
+      this.#productList.updateProductInfo(info);
+    });
+  }
 
   initialize() {
     this.#buyList.forEach(([productName, productCount]) => {
       const { name, price, hasPromotion, withPromotion } =
-        this.#productList.getAllInforMationOfProduct(productName);
+        this.#productList.getAllInformationOfProduct(productName);
       const canBuyPromotion = this.canBuyPromotion(hasPromotion, withPromotion);
       this.makeInfos({ name, price, productCount, canBuyPromotion });
     });
@@ -68,9 +42,10 @@ export default class Receipt {
   makeInfos(info) {
     this.infos.push({
       ...info,
-      promotionPricePurchase: 0, // 프로모션 개수
-      freePurchase: 0, // 증정 개수
-      regularPricePurchase: 0, // 정가구매 개수
+      productCount: Number(info.productCount),
+      promotionPricePurchase: 0,
+      freePurchase: 0,
+      regularPricePurchase: 0,
     });
   }
 
@@ -85,42 +60,140 @@ export default class Receipt {
     return withPromotion.quantity > 0;
   }
 
-  /**
-   * info : 
-   * {
-        name,
-        price,
-        productCount,
-        canBuyPromotion, // 프로모션 존재 && 프로모션 날짜 됨 && 프로모션 재고 남았음
-        promotionPricePurchase, // 프로모션 개수
-        freePurchase, // 증정 개수
-        regularPricePurchase, // 정가구매 개수
-      }
-   */
-
-  재고비교하기() {
-    this.infos.forEach((info) => {
+  async spendInventory() {
+    for (const [index, info] of this.infos.entries()) {
       if (info.canBuyPromotion) {
-        this.프로모션재고소진();
-        return;
+        await this.spendPromotionInventory(info, index);
       }
-      this.일반재고소진();
+      this.spendNoPromotionInventory(info, index);
+    }
+  }
+
+  async wrapperNotExceedPromotion({ info, index, withPromotion }) {
+    await this.notExceedPromotion({
+      info,
+      index,
+      withPromotion,
     });
   }
 
-  프로모션추가구매할지() {}
+  async spendPromotionInventory(info, index) {
+    const { withPromotion } = this.getProductPromotionInfo(info.name);
+    if (info.productCount <= withPromotion.quantity) {
+      await this.wrapperNotExceedPromotion({ info, index, withPromotion });
+    } else {
+      await this.exceedPromotion(info, index, withPromotion);
+    }
+  }
 
-  프로모션재고소진() {}
+  spendNoPromotionInventory(info, index) {
+    this.infos[index].regularPricePurchase = info.productCount;
+  }
 
-  일반재고소진() {}
+  getProductPromotionInfo(productName) {
+    const { withPromotion, withNoPromotion } =
+      this.#productList.getAllInformationOfProduct(productName);
+    return { withPromotion, withNoPromotion };
+  }
 
-  증정구하기() {}
+  updateCurrentInfos(index, { promoteCount, freeCount, regularCount }) {
+    this.infos[index].promotionPricePurchase = promoteCount;
+    this.infos[index].freePurchase = freeCount;
+    this.infos[index].regularPricePurchase = regularCount;
+  }
 
-  // 구매 영수증 출력
-  // 상품명, 수량, 금액
-  // 증정
-  // 총구매액
-  // 행사할인 ( 프로모션 )
-  // 멤버십 할인 ( 프로모션 적용 안된 상품에만 30%)
-  // 내실돈
+  getCalculateBuyAndGet(productCount, promotion) {
+    return this.#promotionList.calculateBuyAndGet(productCount, promotion);
+  }
+
+  async checkAddPromotion({ name, canAddFree, index, canAddPromote }) {
+    const tmp = await InputView.readAddPromotion(name, canAddFree);
+    if (tmp === 'N') {
+      this.infos[index].regularPricePurchase += canAddPromote;
+      this.infos[index].productCount += canAddPromote;
+    }
+  }
+
+  async notExceedPromotion({ info, index, withPromotion }) {
+    const { promoteCount, freeCount, regularCount, canAddPromote, canAddFree } =
+      this.getCalculateBuyAndGet(info.productCount, withPromotion.promotion);
+    this.updateCurrentInfos(index, { promoteCount, freeCount, regularCount });
+    this.infos[index].productCount = promoteCount + freeCount + regularCount;
+
+    if (canAddPromote === 0 && canAddFree === 0) return;
+    await this.checkAddPromotion({ name: info.name, canAddFree, index });
+    if (withPromotion.quantity - info.productCount >= canAddFree) {
+      this.infos[index].freePurchase += canAddFree + regularCount;
+      this.infos[index].promotionPricePurchase += canAddPromote;
+      this.infos[index].regularPricePurchase = 0;
+      this.infos[index].productCount +=
+        canAddFree + regularCount + canAddPromote;
+    }
+  }
+
+  async exceedPromotion(info, index, withPromotion) {
+    const { promoteCount, freeCount, regularCount } =
+      this.#promotionList.calculateBuyAndGet(
+        withPromotion.quantity,
+        withPromotion.promotion,
+      );
+    this.updateCurrentInfos(index, { promoteCount, freeCount, regularCount });
+
+    const noPromotion =
+      regularCount + info.productCount - withPromotion.quantity;
+
+    const tmp = await InputView.readAddRegular(info.name, noPromotion);
+    if (tmp === 'Y') {
+      this.infos[index].regularPricePurchase = noPromotion;
+    } else {
+      this.infos[index].regularPricePurchase = 0;
+    }
+  }
+
+  printHead() {
+    Console.print('\n==============W 편의점================');
+    Console.print('상품명		          수량	      금액   ');
+  }
+
+  printReceipt(membership) {
+    this.printHead();
+    let totalCount = 0;
+    let totalPrice = 0;
+    let promotionDiscount = 0;
+    let membershipDiscount = 0;
+    this.infos.forEach(({ name, price, productCount }) => {
+      totalCount += productCount;
+      totalPrice += productCount * price;
+      Console.print(
+        `${name}  ${productCount} ${(price * productCount).toLocaleString()}`,
+      );
+    });
+    Console.print('=============증	    정===============');
+    this.infos.forEach(({ name, price, productCount, freePurchase }) => {
+      if (freePurchase > 0) {
+        promotionDiscount += freePurchase * price;
+        Console.print(`${name}  ${freePurchase}`);
+        return;
+      }
+      membershipDiscount += price * productCount * 0.3;
+    });
+    Console.print('====================================');
+    Console.print(`총구매액		    ${totalCount}	   ${totalPrice.toLocaleString()}`);
+    Console.print(`행사할인		    -${promotionDiscount.toLocaleString()}`);
+    if (membership === 'N') {
+      Console.print(`멤버십할인		     -0`);
+      Console.print(
+        `내실돈		     ${(totalPrice - promotionDiscount).toLocaleString()}\n`,
+      );
+      return;
+    }
+
+    if (membershipDiscount > 8000) {
+      membershipDiscount = 8000;
+    }
+    Console.print(`멤버십할인		    -${membershipDiscount.toLocaleString()}`);
+    Console.print(
+      `내실돈		     ${(totalPrice - promotionDiscount - membershipDiscount).toLocaleString()}\n`,
+    );
+  }
 }

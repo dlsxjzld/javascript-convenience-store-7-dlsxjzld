@@ -32,8 +32,7 @@ export default class Receipt {
 
   initialize() {
     this.#buyList.forEach(([productName, productCount]) => {
-      const { name, price, hasPromotion, withPromotion } =
-        this.#productList.getAllInformationOfProduct(productName);
+      const { name, price, hasPromotion, withPromotion } = this.#productList.getAllInformationOfProduct(productName);
       const canBuyPromotion = this.canBuyPromotion(hasPromotion, withPromotion);
       this.makeInfos({ name, price, productCount, canBuyPromotion });
     });
@@ -50,10 +49,7 @@ export default class Receipt {
   }
 
   canBuyPromotion(hasPromotion, withPromotion) {
-    if (
-      !hasPromotion ||
-      !this.#promotionList.compareTimesAboutPromotion(withPromotion.promotion)
-    ) {
+    if (!hasPromotion || !this.#promotionList.compareTimesAboutPromotion(withPromotion.promotion)) {
       return false;
     }
 
@@ -91,8 +87,7 @@ export default class Receipt {
   }
 
   getProductPromotionInfo(productName) {
-    const { withPromotion, withNoPromotion } =
-      this.#productList.getAllInformationOfProduct(productName);
+    const { withPromotion, withNoPromotion } = this.#productList.getAllInformationOfProduct(productName);
     return { withPromotion, withNoPromotion };
   }
 
@@ -107,8 +102,10 @@ export default class Receipt {
   }
 
   async notExceedPromotion({ info, index, withPromotion }) {
-    const { promoteCount, freeCount, regularCount, canAddPromote, canAddFree } =
-      this.getCalculateBuyAndGet(info.productCount, withPromotion.promotion);
+    const { promoteCount, freeCount, regularCount, canAddPromote, canAddFree } = this.getCalculateBuyAndGet(
+      info.productCount,
+      withPromotion.promotion,
+    );
     this.updateCurrentInfos(index, { promoteCount, freeCount, regularCount });
     this.infos[index].productCount = promoteCount + freeCount + regularCount;
 
@@ -125,21 +122,18 @@ export default class Receipt {
       this.infos[index].freePurchase += canAddFree + regularCount;
       this.infos[index].promotionPricePurchase += canAddPromote;
       this.infos[index].regularPricePurchase = 0;
-      this.infos[index].productCount +=
-        canAddFree + regularCount + canAddPromote;
+      this.infos[index].productCount += canAddFree + regularCount + canAddPromote;
     }
   }
 
   async exceedPromotion(info, index, withPromotion) {
-    const { promoteCount, freeCount, regularCount } =
-      this.#promotionList.calculateBuyAndGet(
-        withPromotion.quantity,
-        withPromotion.promotion,
-      );
+    const { promoteCount, freeCount, regularCount } = this.#promotionList.calculateBuyAndGet(
+      withPromotion.quantity,
+      withPromotion.promotion,
+    );
     this.updateCurrentInfos(index, { promoteCount, freeCount, regularCount });
 
-    const noPromotion =
-      regularCount + info.productCount - withPromotion.quantity;
+    const noPromotion = regularCount + info.productCount - withPromotion.quantity;
 
     const tmp = await InputView.readAddRegular(info.name, noPromotion);
     if (tmp === 'Y') {
@@ -163,9 +157,7 @@ export default class Receipt {
     this.infos.forEach(({ name, price, productCount }) => {
       totalCount += productCount;
       totalPrice += productCount * price;
-      Console.print(
-        `${name}  ${productCount} ${(price * productCount).toLocaleString()}`,
-      );
+      Console.print(`${name}  ${productCount} ${(price * productCount).toLocaleString()}`);
     });
     Console.print('=============증	    정===============');
     this.infos.forEach(({ name, price, productCount, freePurchase }) => {
@@ -181,9 +173,7 @@ export default class Receipt {
     Console.print(`행사할인		    -${promotionDiscount.toLocaleString()}`);
     if (membership === 'N') {
       Console.print(`멤버십할인		     -0`);
-      Console.print(
-        `내실돈		     ${(totalPrice - promotionDiscount).toLocaleString()}\n`,
-      );
+      Console.print(`내실돈		     ${(totalPrice - promotionDiscount).toLocaleString()}\n`);
       return;
     }
 
@@ -191,8 +181,6 @@ export default class Receipt {
       membershipDiscount = 8000;
     }
     Console.print(`멤버십할인		    -${membershipDiscount.toLocaleString()}`);
-    Console.print(
-      `내실돈		     ${(totalPrice - promotionDiscount - membershipDiscount).toLocaleString()}\n`,
-    );
+    Console.print(`내실돈		     ${(totalPrice - promotionDiscount - membershipDiscount).toLocaleString()}\n`);
   }
 }

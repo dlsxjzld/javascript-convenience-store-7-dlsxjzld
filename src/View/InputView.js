@@ -2,6 +2,8 @@ import { Console } from '@woowacourse/mission-utils';
 import fs from 'fs';
 import path from 'path';
 
+import { MORE_BUY, MEMBERSHIP_DISCOUNT_MESSAGE } from '../constants.js';
+
 export const InputView = {
   readFile(fileName) {
     const absoluteDirectoryPath = path.resolve();
@@ -14,10 +16,40 @@ export const InputView = {
       .map((row) => row.split(','));
   },
 
-  async readItem() {
+  async getMembership() {
+    const input = await Console.readLineAsync(MEMBERSHIP_DISCOUNT_MESSAGE);
+    if (input === 'Y' || input === 'N') {
+      return input;
+    }
+    return this.getMembership();
+  },
+
+  async moreBuy() {
+    const input = await Console.readLineAsync(MORE_BUY);
+    if (input === 'Y' || input === 'N') {
+      return input;
+    }
+    return this.moreBuy();
+  },
+
+  async readAddRegular(productName, get) {
     const input = await Console.readLineAsync(
-      '구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])',
+      `현재 ${productName} ${get}개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)`,
     );
+    if (input === 'Y' || input === 'N') {
+      return input;
+    }
+    return this.readAddRegular(productName, get);
+  },
+
+  async readAddPromotion(productName, get) {
+    const input = await Console.readLineAsync(
+      `현재 ${productName}은(는) ${get}개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n`,
+    );
+    if (input === 'Y' || input === 'N') {
+      return input;
+    }
+    return this.readAddPromotion(productName, get);
   },
 
   async userInput(validate, message, rest) {

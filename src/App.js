@@ -1,5 +1,6 @@
 import { PRODUCTS, PROMOTIONS, READ_ITEM_MESSAGE } from './constants.js';
 import ProductList from './model/ProductList.js';
+import PromotionList from './model/PromotionList.js';
 import { readItem } from './validation/validateFunctions.js';
 import { InputView } from './view/InputView.js';
 import { OutputView } from './view/OutputView.js';
@@ -8,12 +9,14 @@ class App {
   async run() {
     const [products, promotions] = this.getFileContents();
     const productList = new ProductList(products);
+    const promotionList = new PromotionList(promotions);
 
     const userInput = await this.getUserInput(productList);
     const buyList = this.getBuyList(userInput);
 
-    OutputView.printResult(productList.printProductList());
+    OutputView.printResult(promotionList.printPromotionList());
   }
+  // OutputView.printResult(productList.printProductList());
 
   getFileContents() {
     const products = InputView.readFileSync(PRODUCTS);

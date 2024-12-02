@@ -34,9 +34,9 @@ export default class ProductList {
   makeEmptyProduct({ name }) {
     return {
       name,
-      hasMock: false,
+      hasMock: true,
       hasPromotion: false,
-      withNormal: { price: null, quantity: null },
+      withNormal: { price: null, quantity: null, promotion: null },
       withPromotion: { price: null, quantity: null, promotion: null },
     };
   }
@@ -49,12 +49,15 @@ export default class ProductList {
       promotion,
     };
     product.hasPromotion = true;
-    product.hasMock = true;
   }
 
-  addNormal({ name, price, quantity }) {
+  addNormal({ name, price, quantity, promotion }) {
     const product = this.#productList.get(name);
-    product.withNormal = { price: Number(price), quantity: Number(quantity) };
+    product.withNormal = {
+      price: Number(price),
+      quantity: Number(quantity),
+      promotion,
+    };
     product.hasMock = false;
   }
 
@@ -65,5 +68,13 @@ export default class ProductList {
   hasProduct(productName) {
     const result = this.#productList.get(productName);
     return result !== undefined;
+  }
+
+  hasInventory(productName, inventory) {
+    const result = this.#productList.get(productName);
+
+    const normalQuantity = result.withNormal.quantity ?? 0;
+    const promotionQuantity = result.withPromotion.quantity ?? 0;
+    return normalQuantity + promotionQuantity >= inventory;
   }
 }

@@ -25,8 +25,15 @@ const hasProduct = (input, productList) => {
   );
 };
 
-const hasInventory = (input) => {
-  const inventory = splitInput(input).map((inputs) => inputs[1]);
+const hasInventory = (input, productList) => {
+  const inventoryList = splitInput(input);
+  toThrowNewError(
+    inventoryList.some(
+      ([productName, inventory]) =>
+        productList.hasInventory(productName, Number(inventory)) === false,
+    ),
+    '재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.',
+  );
 };
 
 const isAllPositiveNumberType = (input) => {
@@ -90,7 +97,7 @@ export const readItem = (input, productList) => {
   // 상품이 존재하는지
   hasProduct(input, productList);
   // 개수가 재고 이하인지
-  // hasInventory(input,productList)
+  hasInventory(input, productList);
 };
 
 export const check = (input, validate, rest) => {

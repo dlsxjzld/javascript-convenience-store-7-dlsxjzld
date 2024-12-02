@@ -6,17 +6,31 @@ import { OutputView } from './view/OutputView.js';
 
 class App {
   async run() {
-    const products = InputView.readFileSync(PRODUCTS);
-    const promotions = InputView.readFileSync(PROMOTIONS);
-    const userInput = await this.getUserInput();
-
+    const [products, promotions] = this.getFileContents();
     const productList = new ProductList(products);
+
+    const userInput = await this.getUserInput(productList);
+    const buyList = this.getBuyList(userInput);
+
     OutputView.printResult(productList.printProductList());
   }
 
-  // console.log('promotions', promotions);
-  async getUserInput() {
-    return InputView.readUserInput(READ_ITEM_MESSAGE, readItem);
+  getFileContents() {
+    const products = InputView.readFileSync(PRODUCTS);
+    const promotions = InputView.readFileSync(PROMOTIONS);
+    return [products, promotions];
+  }
+
+  async getUserInput(productList) {
+    return InputView.readUserInput(READ_ITEM_MESSAGE, readItem, productList);
+  }
+
+  getBuyList(userInput) {
+    const buyList = userInput.split(',').map((input) => {
+      const [product, inventory] = input.slice(1, -1).split('-');
+      return [product, Number(inventory)];
+    });
+    return buyList;
   }
 }
 

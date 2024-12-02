@@ -61,4 +61,9 @@ export default class ProductList {
   printProductList() {
     return this.#productList;
   }
+
+  hasProduct(productName) {
+    const result = this.#productList.get(productName);
+    return result !== undefined;
+  }
 }

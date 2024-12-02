@@ -15,9 +15,16 @@ const hasEmptySpace = (input) => {
 const splitInput = (input) =>
   input.split(',').map((value) => value.slice(1, -1).split('-'));
 
-const hasProduct = (input) => {
-  const productName = splitInput(input).map((inputs) => inputs[0]);
+const hasProduct = (input, productList) => {
+  const productNameList = splitInput(input).map((inputs) => inputs[0]);
+  toThrowNewError(
+    productNameList.some(
+      (productName) => productList.hasProduct(productName) === false,
+    ),
+    '존재하지 않는 상품입니다. 다시 입력해 주세요.',
+  );
 };
+
 const hasInventory = (input) => {
   const inventory = splitInput(input).map((inputs) => inputs[1]);
 };
@@ -28,7 +35,7 @@ const isAllPositiveNumberType = (input) => {
     inventory.some(
       (number) => Number.isInteger(number) === false || number <= 0,
     ),
-    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요. 수',
+    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
   );
 };
 
@@ -37,7 +44,7 @@ const isRightFormSquareBracket = (input) => {
     input
       .split(',')
       .some((value) => !value.startsWith('[') || !value.endsWith(']')),
-    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요. 브리켓',
+    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
   );
 };
 
@@ -57,7 +64,7 @@ const hasBracketAndDashCount = (input) => {
   const dash = getCharCount(input, '-');
   toThrowNewError(
     leftSquareBracket !== 1 || rightSquareBracket !== 1 || dash !== 1,
-    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요. 대시',
+    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
   );
 };
 
@@ -70,20 +77,20 @@ const checkComma = (input) => {
   const comma = getCharCount(input, ',');
   toThrowNewError(
     product - 1 !== comma,
-    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요. 콤마',
+    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
   );
 };
 
-export const readItem = (input) => {
+export const readItem = (input, productList) => {
   hasEmptySpace(input);
   isRightFormSquareBracket(input);
   checkCharCount(input);
   checkComma(input);
   isAllPositiveNumberType(input);
   // 상품이 존재하는지
-  // hasProduct(input);
+  hasProduct(input, productList);
   // 개수가 재고 이하인지
-  // hasInventory;
+  // hasInventory(input,productList)
 };
 
 export const check = (input, validate, rest) => {

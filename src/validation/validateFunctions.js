@@ -9,7 +9,7 @@ export const toThrowNewError = (condition, errorMessage) => {
 const hasEmptySpace = (input) => {
   toThrowNewError(
     input.includes(' '),
-    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
+    '잘못된 입력입니다. 다시 입력해 주세요. 공백은 안됩니다.',
   );
 };
 const splitInput = (input) =>
@@ -21,7 +21,7 @@ const hasProduct = (input, productList) => {
     productNameList.some(
       (productName) => productList.hasProduct(productName) === false,
     ),
-    '존재하지 않는 상품입니다. 다시 입력해 주세요.',
+    '존재하지 않는 상품입니다. 다시 입력해 주세요. ex)[콜라-2],[사이다-1]',
   );
 };
 
@@ -32,7 +32,7 @@ const hasInventory = (input, productList) => {
       ([productName, inventory]) =>
         productList.hasInventory(productName, Number(inventory)) === false,
     ),
-    '재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.',
+    '재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요. ex)[콜라-2],[사이다-1]',
   );
 };
 
@@ -42,7 +42,7 @@ const isAllPositiveNumberType = (input) => {
     inventory.some(
       (number) => Number.isInteger(number) === false || number <= 0,
     ),
-    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
+    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요. ex)[콜라-2],[사이다-1]',
   );
 };
 
@@ -51,7 +51,7 @@ const isRightFormSquareBracket = (input) => {
     input
       .split(',')
       .some((value) => !value.startsWith('[') || !value.endsWith(']')),
-    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.',
+    '올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요. ex)[콜라-2],[사이다-1]',
   );
 };
 
@@ -94,9 +94,7 @@ export const readItem = (input, productList) => {
   checkCharCount(input);
   checkComma(input);
   isAllPositiveNumberType(input);
-  // 상품이 존재하는지
   hasProduct(input, productList);
-  // 개수가 재고 이하인지
   hasInventory(input, productList);
 };
 

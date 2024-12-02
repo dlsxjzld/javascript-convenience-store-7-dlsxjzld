@@ -12,7 +12,7 @@ export const InputView = {
     );
   },
 
-  async readFileSync(fileName) {
+  readFileSync(fileName) {
     const absolutePath = path.resolve();
     const fileAbsolutePath = `${absolutePath}/public/${fileName}.md`;
     const fileData = fs.readFileSync(fileAbsolutePath, 'utf-8');

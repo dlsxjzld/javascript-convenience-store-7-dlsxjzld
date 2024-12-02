@@ -1,15 +1,16 @@
 export default class ProductList {
+  #key;
+
   #productList;
 
-  constructor(userInput) {
-    const [key, ...productList] = userInput
+  constructor(productsInput) {
+    const [key, ...productList] = productsInput
       .split('\n')
       .filter(Boolean)
       .map((row) => row.split(','));
+    this.#key = key;
     this.#productList = new Map();
-
     this.init(productList);
-    this.addMetaData(productList);
   }
 
   init(productList) {
@@ -19,6 +20,7 @@ export default class ProductList {
       const name = kinds[idx];
       this.#productList.set(kinds[idx], this.makeEmptyProduct({ name }));
     }
+    this.addMetaData(productList);
   }
 
   addMetaData(productList) {

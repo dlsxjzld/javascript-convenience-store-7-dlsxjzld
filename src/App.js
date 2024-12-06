@@ -23,8 +23,13 @@ class App {
     // TODO: 재고 관리
     // 영수증에 실제 재고 추가 해야함,
     // productList에서 재고 차감해야함
-    console.log('buyList', buyList);
-    await this.checkBuyList(this.productList, this.promotionList, buyList);
+    // console.log('buyList', buyList);
+    const receipt = await this.checkBuyList(
+      this.productList,
+      this.promotionList,
+      buyList,
+    );
+    await this.printReceipt(receipt);
     await this.moreRun();
   }
 
@@ -85,20 +90,29 @@ class App {
         this.isPromotionDate(promotionData) &&
         withPromotion.quantity > 0
       ) {
-        const { calculateBuyPromotion, normalBuy } = await this.spendPromotion(
-          productData,
-          promotionData,
-          wantToBuy,
-        ); // 프로모션 할인 적용된 프로모션 재고 소진
-        receipt.push({ name, calculateBuyPromotion, normalBuy });
+        const { promotionBuy, calculateBuyPromotion, normalBuy } =
+          await this.spendPromotion(productData, promotionData, wantToBuy); // 프로모션 할인 적용된 프로모션 재고 소진
+        receipt.push({
+          name,
+          promotionBuy,
+          calculateBuyPromotion,
+          normalBuy,
+          price: withPromotion.price,
+        });
         continue;
       }
       const { normalBuy } = this.spendNoPromotion(productData, wantToBuy); // 프로모션 할인 적용 안된 프로모션 재고, 일반 재고 소진
-      receipt.push({ name, calculateBuyPromotion: 0, normalBuy });
+      receipt.push({
+        name,
+        promotionBuy: 0,
+        calculateBuyPromotion: 0,
+        normalBuy,
+        price: withNormal.price,
+      });
     }
-
-    console.log('buyListMetaData', buyListMetaData);
-    console.log('receipt', receipt);
+    // console.log('buyListMetaData', buyListMetaData);
+    // console.log('receipt', receipt);
+    return receipt;
   }
 
   // promotion 기간인지
@@ -127,16 +141,23 @@ class App {
 
     // 프로모션 할인 적용된 프로모션 재고 소진
     let { canGetMore } = this.calculateAvailableAdd(buy, get, canBuyStock); // 더 받을 수 있는 개수
-    let calculateBuyPromotion = this.calculateBuyPromotion(
+    const canBuyPromotionCount = this.calculateBuyPromotion(
       buy,
       get,
       canBuyStock,
     ); // 프로모션 적용된 개수
-    let normalBuy = canBuyStock - calculateBuyPromotion; // 프로모션 적용 안된 개수 -> 만약 더 받을 수 있는 개수 있는데 Y 누르면 이거 프로모션 적용된 개수에 더해야함
-    console.log('canGetMore', canGetMore);
-    console.log('calculateBuyPromotion', calculateBuyPromotion);
-    console.log('normalBuy', normalBuy);
-    console.log('rest', rest);
+    let calculateBuyPromotion = canBuyPromotionCount * get; // 증정
+    let promotionBuy = canBuyPromotionCount * buy; // 프로모션 적용 O(증정 제외)
+    let normalBuy = canBuyStock - (calculateBuyPromotion + promotionBuy); // 프로모션 적용 안된 개수 -> 만약 더 받을 수 있는 개수 있는데 Y 누르면 이거 프로모션 적용된 개수에 더해야함
+    // console.log('canGetMore 추가 가능 ', canGetMore);
+    // console.log('promotionBuy 프로모션 적용 O 증정 제외', promotionBuy);
+    // console.log('calculateBuyPromotion 증정', calculateBuyPromotion);
+    // console.log('normalBuy 프로모션 적용 X 일반', normalBuy);
+    // console.log('rest', rest);
+
+    // 증정 -> calculateBuyPromotion
+    // 프로모션 적용 O (증정 제외)
+    // 프로모션 적용 X (일반)
 
     /// /////////////// 콜라 8개남음 구매 10개인 상황
     // rest : 2
@@ -144,7 +165,7 @@ class App {
     if (rest > 0) {
       // 프로모션 재고  < 구매하려는 개수
       const userAskForNoPromotion = await InputView.askUser(
-        `현재 ${name} ${normalBuy + rest}개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)`,
+        `현재 ${name} ${normalBuy + rest}개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n`,
       );
       if (userAskForNoPromotion === 'N') {
         normalBuy = 0;
@@ -152,23 +173,25 @@ class App {
       }
     } else if (canGetMore > 0) {
       const userAnswer = await InputView.askUser(
-        `현재 ${name}은(는) ${canGetMore}개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)`,
+        `현재 ${name}은(는) ${canGetMore}개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n`,
       );
       if (userAnswer === 'Y') {
-        calculateBuyPromotion += normalBuy + canGetMore;
+        promotionBuy += normalBuy;
+        calculateBuyPromotion += canGetMore;
         normalBuy = 0;
       }
       canGetMore = 0;
     }
 
-    console.log(
-      'after calculateBuyPromotion, normalBuy',
-      calculateBuyPromotion,
-      normalBuy,
-    );
-    withPromotion.quantity -= calculateBuyPromotion + normalBuy;
+    // console.log(
+    //   'after calculateBuyPromotion, normalBuy, promotionBuy',
+    //   calculateBuyPromotion,
+    //   normalBuy,
+    //   promotionBuy,
+    // );
+    withPromotion.quantity -= calculateBuyPromotion + normalBuy + promotionBuy;
     withNormal.quantity -= rest;
-    return { calculateBuyPromotion, normalBuy: normalBuy + rest };
+    return { promotionBuy, calculateBuyPromotion, normalBuy: normalBuy + rest };
   }
 
   spendNoPromotion(
@@ -207,8 +230,97 @@ class App {
   }
 
   calculateBuyPromotion(buy, get, inventory) {
-    const canBuyPromotion = Math.floor(inventory / (buy + get)) * (buy + get);
-    return canBuyPromotion;
+    const canBuyPromotionCount = Math.floor(inventory / (buy + get));
+    return canBuyPromotionCount;
+  }
+
+  async printReceipt(receipt) {
+    OutputView.printResult('');
+    let totalNormalDisCountMoney = receipt.reduce(
+      (acc, cur) => acc + cur.normalBuy * cur.price,
+      0,
+    );
+
+    const userAnswer = await InputView.askUser(
+      '멤버십 할인을 받으시겠습니까? (Y/N)\n',
+    );
+    if (userAnswer === 'Y') {
+      totalNormalDisCountMoney *= 0.3;
+    }
+    if (userAnswer === 'N') {
+      totalNormalDisCountMoney *= 0;
+    }
+    OutputView.printResult('');
+
+    if (totalNormalDisCountMoney >= 8000) {
+      totalNormalDisCountMoney = 8000;
+    }
+
+    this.printReceiptHeader();
+    for (let i = 0; i < receipt.length; i += 1) {
+      this.printQuantityAndPrice(receipt[i]);
+    }
+
+    const totalPromotionDisCountMoney = receipt.reduce(
+      (acc, cur) => acc + cur.calculateBuyPromotion * cur.price,
+      0,
+    );
+    const totalCount = receipt.reduce(
+      (acc, cur) =>
+        acc + cur.promotionBuy + cur.calculateBuyPromotion + cur.normalBuy,
+      0,
+    );
+
+    const totalBuyPrice = receipt.reduce(
+      (acc, cur) =>
+        acc +
+        (cur.promotionBuy + cur.calculateBuyPromotion + cur.normalBuy) *
+          cur.price,
+      0,
+    );
+
+    if (totalPromotionDisCountMoney > 0) {
+      OutputView.printResult('=============증	정===============');
+      for (let i = 0; i < receipt.length; i += 1) {
+        this.printPromotion(receipt[i]);
+      }
+    }
+
+    OutputView.printResult('====================================');
+    OutputView.printResult(
+      `총구매액		${totalCount}	${totalBuyPrice.toLocaleString()}`,
+    );
+    OutputView.printResult(
+      `행사할인		 	-${totalPromotionDisCountMoney.toLocaleString()}`,
+    );
+    OutputView.printResult(
+      `멤버십할인		 	-${totalNormalDisCountMoney.toLocaleString()}`,
+    );
+    OutputView.printResult(
+      `내실돈		 	${(totalBuyPrice - totalPromotionDisCountMoney - totalNormalDisCountMoney).toLocaleString()}`,
+    );
+  }
+
+  printQuantityAndPrice(product) {
+    const { name, promotionBuy, calculateBuyPromotion, normalBuy, price } =
+      product;
+    const totalQuantity = promotionBuy + calculateBuyPromotion + normalBuy;
+    OutputView.printResult(
+      `${name}  ${totalQuantity}  ${totalQuantity * price}`,
+    );
+  }
+
+  printPromotion(product) {
+    const { name, calculateBuyPromotion } = product;
+    if (calculateBuyPromotion === 0) {
+      return;
+    }
+    OutputView.printResult(`${name}  ${calculateBuyPromotion}`);
+  }
+
+  printReceiptHeader() {
+    OutputView.printResult('==============W 편의점================');
+    OutputView.printResult('상품명		수량	금액');
   }
 }
 

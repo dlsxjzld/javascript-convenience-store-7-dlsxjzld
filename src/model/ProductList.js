@@ -80,4 +80,8 @@ export default class ProductList {
     const promotionQuantity = result.withPromotion.quantity ?? 0;
     return normalQuantity + promotionQuantity >= inventory;
   }
+
+  getBuyListMetaData(buyList) {
+    return buyList.map(([name]) => this.#productList.get(name));
+  }
 }

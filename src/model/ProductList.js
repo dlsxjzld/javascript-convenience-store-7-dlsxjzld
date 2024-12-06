@@ -29,7 +29,7 @@ export default class ProductList {
         this.addPromotion({ name, price, quantity, promotion });
         return;
       }
-      this.addNormal({ name, price, quantity });
+      this.addNormal({ name, price, quantity, promotion });
     });
   }
 
@@ -51,6 +51,7 @@ export default class ProductList {
       promotion,
     };
     product.hasPromotion = true;
+    product.withNormal.price = Number(price);
   }
 
   addNormal({ name, price, quantity, promotion }) {
@@ -63,7 +64,7 @@ export default class ProductList {
     product.hasMock = false;
   }
 
-  printProductList() {
+  getProductList() {
     return this.#productList;
   }
 

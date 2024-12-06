@@ -19,4 +19,12 @@ export const InputView = {
 
     return fileData;
   },
+
+  async askUser(message) {
+    const input = await Console.readLineAsync(message);
+    if (input === 'Y' || input === 'N') {
+      return input;
+    }
+    return this.askUser(message);
+  },
 };

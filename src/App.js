@@ -10,13 +10,12 @@ class App {
     const [products, promotions] = this.getFileContents();
     const productList = new ProductList(products);
     const promotionList = new PromotionList(promotions);
+    OutputView.printWelcome();
+    OutputView.printCurrentProductList(productList);
 
     const userInput = await this.getUserInput(productList);
     const buyList = this.getBuyList(userInput);
-
-    OutputView.printResult(promotionList.printPromotionList());
   }
-  // OutputView.printResult(productList.printProductList());
 
   getFileContents() {
     const products = InputView.readFileSync(PRODUCTS);

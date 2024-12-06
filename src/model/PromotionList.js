@@ -35,7 +35,25 @@ export default class PromotionList {
     };
   }
 
-  printPromotionList() {
+  getPromotionList() {
     return this.#promotionList;
+  }
+
+  getPromotionListForBuyList(buyList, buyListMetaData) {
+    // 콜라,2 오렌지주스,1 -> 2+1, md상품추천
+    return buyList.map(([productName]) => {
+      const { withPromotion } = buyListMetaData.find(
+        ({ name }) => name === productName,
+      );
+
+      return this.getPromotionMetaData(withPromotion.promotion); // null, 'null', promotion
+    });
+  }
+
+  getPromotionMetaData(promotionName) {
+    if (promotionName === null) {
+      return null;
+    }
+    return this.#promotionList.get(promotionName);
   }
 }

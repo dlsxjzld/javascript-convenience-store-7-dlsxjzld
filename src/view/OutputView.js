@@ -1,10 +1,6 @@
 import { Console } from '@woowacourse/mission-utils';
 
 export const OutputView = {
-  printProducts() {
-    Console.print('- 콜라 1,000원 10개 탄산2+1');
-  },
-
   printResult(result) {
     Console.print(result);
   },
@@ -50,5 +46,36 @@ export const OutputView = {
       return '재고 없음';
     }
     return `${quantity.toLocaleString()}개`;
+  },
+
+  printReceiptHeader() {
+    OutputView.printResult('==============W 편의점================');
+    OutputView.printResult('상품명		수량	금액');
+  },
+
+  printReceiptFooter({
+    totalCount,
+    totalBuyPrice,
+    totalPromotionDisCountMoney,
+    totalNormalDisCountMoney,
+  }) {
+    OutputView.printResult('====================================');
+    this.printPrice('총구매액', totalBuyPrice, totalCount);
+    this.printPrice('행사할인', -totalPromotionDisCountMoney);
+    this.printPrice('멤버십할인', -totalNormalDisCountMoney);
+    this.printPrice(
+      '내실돈',
+      totalBuyPrice - totalPromotionDisCountMoney - totalNormalDisCountMoney,
+    );
+  },
+
+  printPrice(message, price, totalCount = null) {
+    if (totalCount) {
+      OutputView.printResult(
+        `${message}		${totalCount}	${price.toLocaleString()}`,
+      );
+      return;
+    }
+    OutputView.printResult(`${message}		${price.toLocaleString()}`);
   },
 };

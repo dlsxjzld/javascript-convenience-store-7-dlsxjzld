@@ -61,9 +61,8 @@ export const OutputView = {
   },
 
   printQuantityAndPrice(product) {
-    const { name, promotionBuy, calculateBuyPromotion, normalBuy, price } =
-      product;
-    const totalQuantity = promotionBuy + calculateBuyPromotion + normalBuy;
+    const { name, promotionBuy, freeGift, normalBuy, price } = product;
+    const totalQuantity = promotionBuy + freeGift + normalBuy;
     OutputView.printResult(
       `${name}  ${totalQuantity}  ${totalQuantity * price}`,
     );

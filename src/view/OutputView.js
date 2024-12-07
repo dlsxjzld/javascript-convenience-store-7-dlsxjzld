@@ -75,7 +75,7 @@ export const OutputView = {
     this.printTotalDiscount(data);
     this.printPaidMoney(data);
   },
-  printTotalPurchaseMoney(totalBuyPrice, totalCount) {
+  printTotalPurchaseMoney({ totalBuyPrice, totalCount }) {
     this.printPrice('총구매액', totalBuyPrice, totalCount);
   },
   printTotalDiscount({
@@ -98,7 +98,7 @@ export const OutputView = {
   },
 
   printPrice(message, price, totalCount = null) {
-    if (totalCount) {
+    if (totalCount !== null) {
       OutputView.printResult(
         `${message}		${totalCount}	${price.toLocaleString()}`,
       );

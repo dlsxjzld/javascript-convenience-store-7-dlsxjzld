@@ -109,6 +109,7 @@ class App {
         continue;
       }
       const { normalBuy } = this.spendNoPromotion(productData, wantToBuy); // 프로모션 할인 적용 안된 프로모션 재고, 일반 재고 소진
+      console.log('normalBuy', normalBuy);
       receipt.push({
         name,
         promotionBuy: 0,
@@ -127,7 +128,7 @@ class App {
   }
 
   async spendPromotion(
-    { name, hasMock, hasPromotion, withNormal, withPromotion },
+    { name, withNormal, withPromotion },
     { buy, get },
     wantToBuy,
   ) {
@@ -180,20 +181,15 @@ class App {
     return { promotionBuy, calculateBuyPromotion, normalBuy: normalBuy + rest };
   }
 
-  spendNoPromotion(
-    { name, hasMock, hasPromotion, withNormal, withPromotion },
-    wantToBuy,
-  ) {
-    let normalBuy = 0;
+  spendNoPromotion({ withNormal, withPromotion }, wantToBuy) {
     if (withPromotion.quantity >= wantToBuy[1]) {
       withPromotion.quantity -= wantToBuy[1];
-      normalBuy += wantToBuy[1];
-    } else {
-      normalBuy += wantToBuy[1];
-      withNormal.quantity -= wantToBuy[1] - withPromotion.quantity;
-      withPromotion.quantity = 0;
+      return { normalBuy: wantToBuy[1] };
     }
-    return { normalBuy };
+
+    withNormal.quantity -= wantToBuy[1] - withPromotion.quantity;
+    withPromotion.quantity = 0;
+    return { normalBuy: wantToBuy[1] };
   }
 
   getRestNoPromotionCount(buy, get, inventory) {

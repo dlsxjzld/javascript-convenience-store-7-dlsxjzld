@@ -48,21 +48,49 @@ export const OutputView = {
     return `${quantity.toLocaleString()}개`;
   },
 
-  printReceiptHeader() {
-    OutputView.printResult('==============W 편의점================');
+  printReceiptMetaData() {
+    OutputView.printResult('\n==============W 편의점================');
     OutputView.printResult('상품명		수량	금액');
   },
 
-  printReceiptFooter({
-    totalCount,
+  printReceiptAllQuantityAndPrice(receipt) {
+    this.printReceiptMetaData();
+    for (let i = 0; i < receipt.length; i += 1) {
+      this.printQuantityAndPrice(receipt[i]);
+    }
+  },
+
+  printQuantityAndPrice(product) {
+    const { name, promotionBuy, calculateBuyPromotion, normalBuy, price } =
+      product;
+    const totalQuantity = promotionBuy + calculateBuyPromotion + normalBuy;
+    OutputView.printResult(
+      `${name}  ${totalQuantity}  ${totalQuantity * price}`,
+    );
+  },
+
+  printReceiptPriceInfo(data) {
+    OutputView.printResult('====================================');
+    this.printTotalPurchaseMoney(data);
+    this.printTotalDiscount(data);
+    this.printPaidMoney(data);
+  },
+  printTotalPurchaseMoney(totalBuyPrice, totalCount) {
+    this.printPrice('총구매액', totalBuyPrice, totalCount);
+  },
+  printTotalDiscount({
+    totalPromotionDisCountMoney,
+    totalNormalDisCountMoney,
+  }) {
+    this.printPrice('행사할인', -totalPromotionDisCountMoney);
+    this.printPrice('멤버십할인', -totalNormalDisCountMoney);
+  },
+
+  printPaidMoney({
     totalBuyPrice,
     totalPromotionDisCountMoney,
     totalNormalDisCountMoney,
   }) {
-    OutputView.printResult('====================================');
-    this.printPrice('총구매액', totalBuyPrice, totalCount);
-    this.printPrice('행사할인', -totalPromotionDisCountMoney);
-    this.printPrice('멤버십할인', -totalNormalDisCountMoney);
     this.printPrice(
       '내실돈',
       totalBuyPrice - totalPromotionDisCountMoney - totalNormalDisCountMoney,

@@ -13,8 +13,6 @@ export default class PromotionList {
     this.init(promotionList);
   }
 
-  // name,buy,get,start_date,end_date
-  // 탄산2+1,2,1,2024-01-01,2024-12-31
   init(promotionList) {
     for (let idx = 0; idx < promotionList.length; idx += 1) {
       const [name, buy, get, startDate, endDate] = promotionList[idx];
@@ -40,13 +38,12 @@ export default class PromotionList {
   }
 
   getPromotionListForBuyList(buyList, buyListMetaData) {
-    // 콜라,2 오렌지주스,1 -> 2+1, md상품추천
     return buyList.map(([productName]) => {
       const { withPromotion } = buyListMetaData.find(
         ({ name }) => name === productName,
       );
 
-      return this.getPromotionMetaData(withPromotion.promotion); // null, 'null', promotion
+      return this.getPromotionMetaData(withPromotion.promotion);
     });
   }
 

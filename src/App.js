@@ -6,6 +6,30 @@ import { readItem } from './validation/validateFunctions.js';
 import { InputView } from './view/InputView.js';
 import { OutputView } from './view/OutputView.js';
 
+const RECEIPT_FUNCTION = Object.freeze({
+  NORMAL_DISCOUNT: (receipt) =>
+    receipt.reduce((acc, cur) => acc + cur.normalBuy * cur.price, 0),
+  PROMOTION_DISCOUNT: (receipt) =>
+    receipt.reduce(
+      (acc, cur) => acc + cur.calculateBuyPromotion * cur.price,
+      0,
+    ),
+  COUNT: (receipt) =>
+    receipt.reduce(
+      (acc, cur) =>
+        acc + cur.promotionBuy + cur.calculateBuyPromotion + cur.normalBuy,
+      0,
+    ),
+  BUY_PRICE: (receipt) =>
+    receipt.reduce(
+      (acc, cur) =>
+        acc +
+        (cur.promotionBuy + cur.calculateBuyPromotion + cur.normalBuy) *
+          cur.price,
+      0,
+    ),
+});
+
 class App {
   constructor() {
     const [products, promotions] = this.getFileContents();
@@ -177,15 +201,12 @@ class App {
   }
 
   getAvailableAdd(buy, get, inventory) {
-    let noPromotion = inventory % (buy + get);
-    let canGetMore = 0; // 추가로 받는다면 받을 수 있는 개수
-    while (noPromotion >= buy) {
-      if (noPromotion < buy + get) {
-        canGetMore = buy + get - noPromotion;
-      } else if (noPromotion === buy) {
-        canGetMore += get;
-      }
-      noPromotion -= buy;
+    const noPromotion = inventory % (buy + get);
+    let canGetMore = 0;
+    if (noPromotion > buy && noPromotion < buy + get) {
+      canGetMore = buy + get - noPromotion;
+    } else if (noPromotion === buy) {
+      canGetMore += get;
     }
     return { canGetMore };
   }
@@ -196,43 +217,29 @@ class App {
   }
 
   async printReceipt(receipt) {
-    OutputView.printResult('');
-    const totalNormalDisCountMoney =
-      await this.getTotalNormalDiscountMoney(receipt);
-
-    OutputView.printResult('');
-
-    OutputView.printReceiptHeader();
-    for (let i = 0; i < receipt.length; i += 1) {
-      this.printQuantityAndPrice(receipt[i]);
-    }
-
-    const totalPromotionDisCountMoney = receipt.reduce(
-      (acc, cur) => acc + cur.calculateBuyPromotion * cur.price,
-      0,
+    const totalNormalDisCountMoney = await this.getNormalDiscount(receipt);
+    OutputView.printReceiptAllQuantityAndPrice(receipt);
+    const totalPromotionDisCountMoney = this.getAndPrintTotalPromotion(receipt);
+    this.printFooter(
+      receipt,
+      totalPromotionDisCountMoney,
+      totalNormalDisCountMoney,
     );
-    const totalCount = receipt.reduce(
-      (acc, cur) =>
-        acc + cur.promotionBuy + cur.calculateBuyPromotion + cur.normalBuy,
-      0,
-    );
+  }
 
-    const totalBuyPrice = receipt.reduce(
-      (acc, cur) =>
-        acc +
-        (cur.promotionBuy + cur.calculateBuyPromotion + cur.normalBuy) *
-          cur.price,
-      0,
-    );
-
+  getAndPrintTotalPromotion(receipt) {
+    const totalPromotionDisCountMoney =
+      this.getTotalPromotionDiscountMoney(receipt);
     if (totalPromotionDisCountMoney > 0) {
-      OutputView.printResult('=============증	정===============');
-      for (let i = 0; i < receipt.length; i += 1) {
-        this.printPromotion(receipt[i]);
-      }
+      this.printTotalPromotion(receipt);
     }
+    return totalPromotionDisCountMoney;
+  }
 
-    OutputView.printReceiptFooter({
+  printFooter(receipt, totalPromotionDisCountMoney, totalNormalDisCountMoney) {
+    const totalCount = RECEIPT_FUNCTION.COUNT(receipt);
+    const totalBuyPrice = RECEIPT_FUNCTION.BUY_PRICE(receipt);
+    OutputView.printReceiptPriceInfo({
       totalCount,
       totalBuyPrice,
       totalPromotionDisCountMoney,
@@ -240,9 +247,22 @@ class App {
     });
   }
 
+  getTotalPromotionDiscountMoney(receipt) {
+    const totalPromotionDisCountMoney =
+      RECEIPT_FUNCTION.PROMOTION_DISCOUNT(receipt);
+    return totalPromotionDisCountMoney;
+  }
+
+  printTotalPromotion(receipt) {
+    OutputView.printResult('=============증	정===============');
+    for (let i = 0; i < receipt.length; i += 1) {
+      this.printPromotion(receipt[i]);
+    }
+  }
+
   async getMemberShip() {
     const userAnswer = await InputView.askUser(
-      '멤버십 할인을 받으시겠습니까? (Y/N)\n',
+      '\n멤버십 할인을 받으시겠습니까? (Y/N)\n',
     );
     if (userAnswer === 'Y') {
       return 0.3;
@@ -250,17 +270,8 @@ class App {
     return 0;
   }
 
-  calculateTotalNormalMoney(receipt) {
-    let result = 0;
-    for (let i = 0; i < receipt.length; i += 1) {
-      const { normalBuy, price } = receipt[i];
-      result += normalBuy * price;
-    }
-    return result;
-  }
-
-  async getTotalNormalDiscountMoney(receipt) {
-    let money = this.calculateTotalNormalMoney(receipt);
+  async getNormalDiscount(receipt) {
+    let money = RECEIPT_FUNCTION.NORMAL_DISCOUNT(receipt);
     const membershipRate = await this.getMemberShip();
     money *= membershipRate;
 

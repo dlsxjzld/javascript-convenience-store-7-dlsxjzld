@@ -10,22 +10,16 @@ const RECEIPT_FUNCTION = Object.freeze({
   NORMAL_DISCOUNT: (receipt) =>
     receipt.reduce((acc, cur) => acc + cur.normalBuy * cur.price, 0),
   PROMOTION_DISCOUNT: (receipt) =>
-    receipt.reduce(
-      (acc, cur) => acc + cur.calculateBuyPromotion * cur.price,
-      0,
-    ),
+    receipt.reduce((acc, cur) => acc + cur.freeGift * cur.price, 0),
   COUNT: (receipt) =>
     receipt.reduce(
-      (acc, cur) =>
-        acc + cur.promotionBuy + cur.calculateBuyPromotion + cur.normalBuy,
+      (acc, cur) => acc + cur.promotionBuy + cur.freeGift + cur.normalBuy,
       0,
     ),
   BUY_PRICE: (receipt) =>
     receipt.reduce(
       (acc, cur) =>
-        acc +
-        (cur.promotionBuy + cur.calculateBuyPromotion + cur.normalBuy) *
-          cur.price,
+        acc + (cur.promotionBuy + cur.freeGift + cur.normalBuy) * cur.price,
       0,
     ),
 });
@@ -79,41 +73,44 @@ class App {
   }
 
   async checkBuyList(buyList) {
-    const receipt = [];
     const buyListMetaData = this.productList.getBuyListMetaData(buyList);
     const buyListPromotionData = this.promotionList.getPromotionListForBuyList(
       buyList,
       buyListMetaData,
     );
 
+    const receipt = [];
+
     for (let idx = 0; idx < buyList.length; idx += 1) {
       const wantToBuy = buyList[idx];
       const productData = buyListMetaData[idx];
       const promotionData = buyListPromotionData[idx];
-
       const { name, hasPromotion, withNormal, withPromotion } = productData;
+
       if (
         hasPromotion &&
         this.isPromotionDate(promotionData) &&
         withPromotion.quantity > 0
       ) {
-        const { promotionBuy, calculateBuyPromotion, normalBuy } =
-          await this.spendPromotion(productData, promotionData, wantToBuy); // 프로모션 할인 적용된 프로모션 재고 소진
+        const { promotionBuy, freeGift, normalBuy } = await this.spendPromotion(
+          productData,
+          promotionData,
+          wantToBuy,
+        ); // 프로모션 할인 적용된 프로모션 재고 소진
         receipt.push({
           name,
           promotionBuy,
-          calculateBuyPromotion,
+          freeGift,
           normalBuy,
           price: withPromotion.price,
         });
         continue;
       }
       const { normalBuy } = this.spendNoPromotion(productData, wantToBuy); // 프로모션 할인 적용 안된 프로모션 재고, 일반 재고 소진
-      console.log('normalBuy', normalBuy);
       receipt.push({
         name,
         promotionBuy: 0,
-        calculateBuyPromotion: 0,
+        freeGift: 0,
         normalBuy,
         price: withNormal.price,
       });
@@ -146,14 +143,10 @@ class App {
 
     // 프로모션 할인 적용된 프로모션 재고 소진
     let { canGetMore } = this.getAvailableAdd(buy, get, canBuyStock); // 더 받을 수 있는 개수
-    const canBuyPromotionCount = this.calculateBuyPromotion(
-      buy,
-      get,
-      canBuyStock,
-    ); // 프로모션 적용된 개수
-    let calculateBuyPromotion = canBuyPromotionCount * get; // 증정
-    let promotionBuy = canBuyPromotionCount * buy; // 프로모션 적용 O(증정 제외)
-    let normalBuy = canBuyStock - (calculateBuyPromotion + promotionBuy); // 프로모션 적용 안된 개수 -> 만약 더 받을 수 있는 개수 있는데 Y 누르면 이거 프로모션 적용된 개수에 더해야함
+    const canBuyFreeGift = this.calculateFreeGift(buy, get, canBuyStock); // 프로모션 적용된 개수
+    let freeGift = canBuyFreeGift * get; // 증정
+    let promotionBuy = canBuyFreeGift * buy; // 프로모션 적용 O(증정 제외)
+    let normalBuy = canBuyStock - (freeGift + promotionBuy); // 프로모션 적용 안된 개수 -> 만약 더 받을 수 있는 개수 있는데 Y 누르면 이거 프로모션 적용된 개수에 더해야함
 
     if (rest > 0) {
       // 프로모션 재고  < 구매하려는 개수
@@ -170,15 +163,15 @@ class App {
       );
       if (userAnswer === 'Y') {
         promotionBuy += normalBuy;
-        calculateBuyPromotion += canGetMore;
+        freeGift += canGetMore;
         normalBuy = 0;
       }
       canGetMore = 0;
     }
 
-    withPromotion.quantity -= calculateBuyPromotion + normalBuy + promotionBuy;
+    withPromotion.quantity -= freeGift + normalBuy + promotionBuy;
     withNormal.quantity -= rest;
-    return { promotionBuy, calculateBuyPromotion, normalBuy: normalBuy + rest };
+    return { promotionBuy, freeGift, normalBuy: normalBuy + rest };
   }
 
   spendNoPromotion({ withNormal, withPromotion }, wantToBuy) {
@@ -207,9 +200,9 @@ class App {
     return { canGetMore };
   }
 
-  calculateBuyPromotion(buy, get, inventory) {
-    const canBuyPromotionCount = Math.floor(inventory / (buy + get));
-    return canBuyPromotionCount;
+  calculateFreeGift(buy, get, inventory) {
+    const canBuyFreeGift = Math.floor(inventory / (buy + get));
+    return canBuyFreeGift;
   }
 
   async printReceipt(receipt) {
@@ -277,21 +270,12 @@ class App {
     return money;
   }
 
-  printQuantityAndPrice(product) {
-    const { name, promotionBuy, calculateBuyPromotion, normalBuy, price } =
-      product;
-    const totalQuantity = promotionBuy + calculateBuyPromotion + normalBuy;
-    OutputView.printResult(
-      `${name}  ${totalQuantity}  ${totalQuantity * price}`,
-    );
-  }
-
   printPromotion(product) {
-    const { name, calculateBuyPromotion } = product;
-    if (calculateBuyPromotion === 0) {
+    const { name, freeGift } = product;
+    if (freeGift === 0) {
       return;
     }
-    OutputView.printResult(`${name}  ${calculateBuyPromotion}`);
+    OutputView.printResult(`${name}  ${freeGift}`);
   }
 }
 
